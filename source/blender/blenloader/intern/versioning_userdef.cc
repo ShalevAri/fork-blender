@@ -1673,6 +1673,10 @@ void blo_do_versions_userdef(UserDef *userdef)
     }
   }
 
+  if (!USER_VERSION_ATLEAST(500, 11)) {
+    userdef->gpu_flag &= ~USER_GPU_FLAG_UNUSED_0;
+  }
+
   if (!USER_VERSION_ATLEAST(500, 59)) {
     userdef->preferences_display_type = USER_TEMP_SPACE_DISPLAY_WINDOW;
   }
@@ -1728,8 +1732,13 @@ void blo_do_versions_userdef(UserDef *userdef)
     BKE_addon_remove_safe(&userdef->addons, "copy_global_transform");
   }
 
-  if (!USER_VERSION_ATLEAST(501, 0)) {
-    userdef->gpu_flag &= ~USER_GPU_FLAG_UNUSED_0;
+  if (!USER_VERSION_ATLEAST(500, 116)) {
+    BKE_preferences_asset_shelf_settings_ensure_catalog_path_enabled(
+        userdef, "NODE_AST_compositor", "Camera & Lens Effects");
+    BKE_preferences_asset_shelf_settings_ensure_catalog_path_enabled(
+        userdef, "NODE_AST_compositor", "Creative");
+    BKE_preferences_asset_shelf_settings_ensure_catalog_path_enabled(
+        userdef, "NODE_AST_compositor", "Utilities");
   }
 
   /**

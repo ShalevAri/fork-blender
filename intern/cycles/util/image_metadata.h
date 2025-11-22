@@ -38,6 +38,7 @@ class ImageMetaData {
   bool compress_as_srgb = false;
   bool associate_alpha = false;
   bool ignore_alpha = false;
+  bool channel_packed = false;
   bool is_cmyk = false;
 
   /* Tiling */

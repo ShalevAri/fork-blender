@@ -45,7 +45,8 @@ class ColorSpaceManager {
                               const int64_t height,
                               const int64_t y_stride,
                               bool is_rgba,
-                              bool compress_as_srgb);
+                              bool compress_as_srgb,
+                              bool ignore_alpha);
 
   /* Clear memory when the application exits. Invalidates all processors. */
   static void free_memory();

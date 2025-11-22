@@ -97,6 +97,7 @@ void ImageMetaData::finalize(const ImageAlphaType alpha_type)
   }
 
   ignore_alpha = alpha_type == IMAGE_ALPHA_IGNORE;
+  channel_packed = alpha_type == IMAGE_ALPHA_CHANNEL_PACKED;
 
   /* For typical RGBA images we let OIIO convert to associated alpha,
    * but some types we want to leave the RGB channels untouched. */
@@ -112,7 +113,8 @@ void ImageMetaData::finalize(const ImageAlphaType alpha_type)
       average_color = color_srgb_to_linear_v4(average_color);
     }
     else {
-      ColorSpaceManager::to_scene_linear(colorspace, &average_color.x, 1, 1, 1, true, false);
+      ColorSpaceManager::to_scene_linear(
+          colorspace, &average_color.x, 1, 1, 1, true, false, ignore_alpha || channel_packed);
     }
   }
 }
@@ -450,8 +452,14 @@ static void conform_pixels_to_metadata_type(const ImageMetaData &metadata,
       metadata.colorspace != u_colorspace_data)
   {
     /* Convert to scene linear. */
-    ColorSpaceManager::to_scene_linear(
-        metadata.colorspace, pixels, width, height, y_stride, is_rgba, metadata.compress_as_srgb);
+    ColorSpaceManager::to_scene_linear(metadata.colorspace,
+                                       pixels,
+                                       width,
+                                       height,
+                                       y_stride,
+                                       is_rgba,
+                                       metadata.compress_as_srgb,
+                                       metadata.ignore_alpha || metadata.channel_packed);
   }
 
   /* Make sure we don't have buggy values. */
