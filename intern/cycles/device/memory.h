@@ -30,7 +30,7 @@ enum MemoryType {
   MEM_READ_WRITE,
   MEM_DEVICE_ONLY,
   MEM_GLOBAL,
-  MEM_IMAGE,
+  MEM_IMAGE_TEXTURE,
 };
 
 /* Supported Data Types */

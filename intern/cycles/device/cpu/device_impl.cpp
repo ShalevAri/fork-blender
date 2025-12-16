@@ -94,7 +94,7 @@ bool CPUDevice::load_image_info()
 
 void CPUDevice::mem_alloc(device_memory &mem)
 {
-  if (mem.type == MEM_IMAGE) {
+  if (mem.type == MEM_IMAGE_TEXTURE) {
     assert(!"mem_alloc not supported for images.");
   }
   else if (mem.type == MEM_GLOBAL) {
@@ -128,7 +128,7 @@ void CPUDevice::mem_copy_to(device_memory &mem)
     global_free(mem);
     global_alloc(mem);
   }
-  else if (mem.type == MEM_IMAGE) {
+  else if (mem.type == MEM_IMAGE_TEXTURE) {
     image_free((device_image &)mem);
     image_alloc((device_image &)mem);
   }
@@ -168,7 +168,7 @@ void CPUDevice::mem_free(device_memory &mem)
   if (mem.type == MEM_GLOBAL) {
     global_free(mem);
   }
-  else if (mem.type == MEM_IMAGE) {
+  else if (mem.type == MEM_IMAGE_TEXTURE) {
     image_free((device_image &)mem);
   }
   else if (mem.device_pointer) {

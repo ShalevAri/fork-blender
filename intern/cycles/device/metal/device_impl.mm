@@ -709,7 +709,7 @@ void MetalDevice::generic_free(device_memory &mem)
 
 void MetalDevice::mem_alloc(device_memory &mem)
 {
-  if (mem.type == MEM_IMAGE) {
+  if (mem.type == MEM_IMAGE_TEXTURE) {
     assert(!"mem_alloc not supported for images.");
   }
   else if (mem.type == MEM_GLOBAL) {
@@ -726,7 +726,7 @@ void MetalDevice::mem_copy_to(device_memory &mem)
     if (mem.type == MEM_GLOBAL) {
       global_alloc(mem);
     }
-    else if (mem.type == MEM_IMAGE) {
+    else if (mem.type == MEM_IMAGE_TEXTURE) {
       image_alloc((device_image &)mem);
     }
     else {
@@ -738,7 +738,7 @@ void MetalDevice::mem_copy_to(device_memory &mem)
     if (mem.type == MEM_GLOBAL) {
       generic_copy_to(mem);
     }
-    else if (mem.type == MEM_IMAGE) {
+    else if (mem.type == MEM_IMAGE_TEXTURE) {
       image_copy_to((device_image &)mem);
     }
     else {
@@ -773,7 +773,7 @@ void MetalDevice::mem_free(device_memory &mem)
   if (mem.type == MEM_GLOBAL) {
     global_free(mem);
   }
-  else if (mem.type == MEM_IMAGE) {
+  else if (mem.type == MEM_IMAGE_TEXTURE) {
     image_free((device_image &)mem);
   }
   else {

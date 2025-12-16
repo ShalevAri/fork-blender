@@ -149,7 +149,7 @@ bool HIPDeviceQueue::synchronize()
 
 void HIPDeviceQueue::zero_to_device(device_memory &mem)
 {
-  assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE);
+  assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE_TEXTURE);
 
   if (mem.memory_size() == 0) {
     return;
@@ -171,7 +171,7 @@ void HIPDeviceQueue::zero_to_device(device_memory &mem)
 
 void HIPDeviceQueue::copy_to_device(device_memory &mem)
 {
-  assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE);
+  assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE_TEXTURE);
 
   if (mem.memory_size() == 0) {
     return;
@@ -195,7 +195,7 @@ void HIPDeviceQueue::copy_to_device(device_memory &mem)
 
 void HIPDeviceQueue::copy_from_device(device_memory &mem)
 {
-  assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE);
+  assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE_TEXTURE);
 
   if (mem.memory_size() == 0) {
     return;

@@ -151,7 +151,7 @@ bool CUDADeviceQueue::synchronize()
 
 void CUDADeviceQueue::zero_to_device(device_memory &mem)
 {
-  assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE);
+  assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE_TEXTURE);
 
   if (mem.memory_size() == 0) {
     return;
@@ -173,7 +173,7 @@ void CUDADeviceQueue::zero_to_device(device_memory &mem)
 
 void CUDADeviceQueue::copy_to_device(device_memory &mem)
 {
-  assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE);
+  assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE_TEXTURE);
 
   if (mem.memory_size() == 0) {
     return;
@@ -197,7 +197,7 @@ void CUDADeviceQueue::copy_to_device(device_memory &mem)
 
 void CUDADeviceQueue::copy_from_device(device_memory &mem)
 {
-  assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE);
+  assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE_TEXTURE);
 
   if (mem.memory_size() == 0) {
     return;

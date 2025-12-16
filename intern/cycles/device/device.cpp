@@ -601,7 +601,7 @@ void GPUDevice::move_textures_to_host(size_t size, const size_t headroom, const 
         continue;
       }
 
-      const bool is_texture = (mem.type == MEM_IMAGE || mem.type == MEM_GLOBAL) &&
+      const bool is_texture = (mem.type == MEM_IMAGE_TEXTURE || mem.type == MEM_GLOBAL) &&
                               (&mem != &image_info);
       const bool is_image = is_texture && (mem.data_height > 1);
 
@@ -666,7 +666,7 @@ GPUDevice::Mem *GPUDevice::generic_alloc(device_memory &mem, const size_t pitch_
    * If there is not enough room for working memory, we will try to move
    * textures to host memory, assuming the performance impact would have
    * been worse for working memory. */
-  const bool is_texture = (mem.type == MEM_IMAGE || mem.type == MEM_GLOBAL) &&
+  const bool is_texture = (mem.type == MEM_IMAGE_TEXTURE || mem.type == MEM_GLOBAL) &&
                           (&mem != &image_info);
   const bool is_image = is_texture && (mem.data_height > 1);
 

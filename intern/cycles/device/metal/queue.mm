@@ -673,7 +673,7 @@ void MetalDeviceQueue::zero_to_device(device_memory &mem)
       return;
     }
 
-    assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE);
+    assert(mem.type != MEM_GLOBAL && mem.type != MEM_IMAGE_TEXTURE);
 
     if (mem.memory_size() == 0) {
       return;
@@ -735,7 +735,7 @@ void MetalDeviceQueue::prepare_resources(DeviceKernel /*kernel*/)
     device_memory *mem = it.first;
 
     MTLResourceUsage usage = MTLResourceUsageRead;
-    if (mem->type != MEM_GLOBAL && mem->type != MEM_READ_ONLY && mem->type != MEM_IMAGE) {
+    if (mem->type != MEM_GLOBAL && mem->type != MEM_READ_ONLY && mem->type != MEM_IMAGE_TEXTURE) {
       usage |= MTLResourceUsageWrite;
     }
 

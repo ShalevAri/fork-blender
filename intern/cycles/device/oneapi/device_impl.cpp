@@ -421,7 +421,7 @@ void OneapiDevice::host_free(const MemoryType type, void *host_pointer, const si
 
 void OneapiDevice::mem_alloc(device_memory &mem)
 {
-  if (mem.type == MEM_IMAGE) {
+  if (mem.type == MEM_IMAGE_TEXTURE) {
     assert(!"mem_alloc not supported for images.");
   }
   else if (mem.type == MEM_GLOBAL) {
@@ -454,7 +454,7 @@ void OneapiDevice::mem_copy_to(device_memory &mem)
   if (mem.type == MEM_GLOBAL) {
     global_copy_to(mem);
   }
-  else if (mem.type == MEM_IMAGE) {
+  else if (mem.type == MEM_IMAGE_TEXTURE) {
     image_copy_to((device_image &)mem);
   }
   else {
@@ -483,7 +483,7 @@ void OneapiDevice::mem_move_to_host(device_memory &mem)
     global_free(mem);
     global_alloc(mem);
   }
-  else if (mem.type == MEM_IMAGE) {
+  else if (mem.type == MEM_IMAGE_TEXTURE) {
     image_free((device_image &)mem);
     image_alloc((device_image &)mem);
   }
@@ -495,7 +495,7 @@ void OneapiDevice::mem_move_to_host(device_memory &mem)
 void OneapiDevice::mem_copy_from(
     device_memory &mem, const size_t y, size_t w, const size_t h, size_t elem)
 {
-  if (mem.type == MEM_IMAGE) {
+  if (mem.type == MEM_IMAGE_TEXTURE) {
     assert(!"mem_copy_from not supported for images.");
   }
   else if (mem.host_pointer) {
@@ -571,7 +571,7 @@ void OneapiDevice::mem_free(device_memory &mem)
   if (mem.type == MEM_GLOBAL) {
     global_free(mem);
   }
-  else if (mem.type == MEM_IMAGE) {
+  else if (mem.type == MEM_IMAGE_TEXTURE) {
     image_free((device_image &)mem);
   }
   else {

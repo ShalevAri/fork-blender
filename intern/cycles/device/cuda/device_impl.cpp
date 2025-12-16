@@ -567,7 +567,7 @@ void CUDADevice::copy_host_to_device(void *device_pointer, void *host_pointer, c
 
 void CUDADevice::mem_alloc(device_memory &mem)
 {
-  if (mem.type == MEM_IMAGE) {
+  if (mem.type == MEM_IMAGE_TEXTURE) {
     assert(!"mem_alloc not supported for images.");
   }
   else if (mem.type == MEM_GLOBAL) {
@@ -583,7 +583,7 @@ void CUDADevice::mem_copy_to(device_memory &mem)
   if (mem.type == MEM_GLOBAL) {
     global_copy_to(mem);
   }
-  else if (mem.type == MEM_IMAGE) {
+  else if (mem.type == MEM_IMAGE_TEXTURE) {
     image_copy_to((device_image &)mem);
   }
   else {
@@ -603,7 +603,7 @@ void CUDADevice::mem_move_to_host(device_memory &mem)
     global_free(mem);
     global_alloc(mem);
   }
-  else if (mem.type == MEM_IMAGE) {
+  else if (mem.type == MEM_IMAGE_TEXTURE) {
     image_free((device_image &)mem);
     image_alloc((device_image &)mem);
   }
@@ -615,7 +615,7 @@ void CUDADevice::mem_move_to_host(device_memory &mem)
 void CUDADevice::mem_copy_from(
     device_memory &mem, const size_t y, size_t w, const size_t h, size_t elem)
 {
-  if (mem.type == MEM_IMAGE) {
+  if (mem.type == MEM_IMAGE_TEXTURE) {
     assert(!"mem_copy_from not supported for images.");
   }
   else if (mem.host_pointer) {
@@ -656,7 +656,7 @@ void CUDADevice::mem_free(device_memory &mem)
   if (mem.type == MEM_GLOBAL) {
     global_free(mem);
   }
-  else if (mem.type == MEM_IMAGE) {
+  else if (mem.type == MEM_IMAGE_TEXTURE) {
     image_free((device_image &)mem);
   }
   else {

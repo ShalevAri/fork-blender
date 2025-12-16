@@ -411,7 +411,7 @@ class MultiDevice : public Device {
       owner_sub->device->mem_copy_to(mem);
       owner_sub->ptr_map[key] = mem.device_pointer;
 
-      if (mem.type == MEM_GLOBAL || mem.type == MEM_IMAGE) {
+      if (mem.type == MEM_GLOBAL || mem.type == MEM_IMAGE_TEXTURE) {
         /* Need to create texture objects and update pointer in kernel globals on all devices */
         for (SubDevice *island_sub : island) {
           if (island_sub != owner_sub) {
@@ -428,7 +428,7 @@ class MultiDevice : public Device {
 
   void mem_move_to_host(device_memory &mem) override
   {
-    assert(mem.type == MEM_GLOBAL || mem.type == MEM_IMAGE);
+    assert(mem.type == MEM_GLOBAL || mem.type == MEM_IMAGE_TEXTURE);
 
     device_ptr existing_key = mem.device_pointer;
     device_ptr key = (existing_key) ? existing_key : unique_key++;
@@ -535,7 +535,7 @@ class MultiDevice : public Device {
       owner_sub->device->mem_free(mem);
       owner_sub->ptr_map.erase(owner_sub->ptr_map.find(key));
 
-      if (mem.type == MEM_IMAGE) {
+      if (mem.type == MEM_IMAGE_TEXTURE) {
         /* Free texture objects on all devices */
         for (SubDevice *island_sub : island) {
           if (island_sub != owner_sub) {
