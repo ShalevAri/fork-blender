@@ -191,7 +191,7 @@ const char *ColorSpaceManager::colorspace_interop_id(ustring colorspace)
       return nullptr;
     }
   }
-  catch (const OCIO::Exception &exception) {
+  catch (const OCIO::Exception &) {
     return nullptr;
   }
 

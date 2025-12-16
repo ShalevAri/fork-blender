@@ -446,7 +446,7 @@ string path_normalize(const string &path)
 {
   std::string normpath = std::filesystem::path(path).lexically_normal().make_preferred().string();
 #ifdef _WIN32
-  normpath = normpath.replace("\\", "/");
+  string_replace(normpath, "\\", "/");
 #endif
   return normpath;
 }
