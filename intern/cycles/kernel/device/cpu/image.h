@@ -350,7 +350,6 @@ ccl_device float4 kernel_image_interp(
       if (tile_descriptor == KERNEL_TILE_LOAD_FAILED) {
         return IMAGE_TEXTURE_MISSING_RGBA;
       }
-      // TODO: cancel shader execution
       return tex.average_color;
     }
 

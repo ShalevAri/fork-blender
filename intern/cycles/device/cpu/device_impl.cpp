@@ -58,7 +58,7 @@ CPUDevice::CPUDevice(const DeviceInfo &info_, Stats &stats_, Profiler &profiler_
   need_image_info = false;
 
   /* TODO: temporary hack to avoid having to resize this for on demand tile loading. */
-  image_info.resize(1024);
+  image_info.resize(10240);
   need_image_info = true;
 }
 
