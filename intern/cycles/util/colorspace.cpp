@@ -430,7 +430,7 @@ inline void processor_apply_pixels_rgba(const OCIO::Processor *processor,
     const int64_t num_rows = std::min(chunk_rows, height - row);
 
     for (int64_t j = 0; j < num_rows; j++) {
-      T *pixel = pixels + (row + j) * y_stride * 4;
+      T *pixel = pixels + (row + j) * y_stride;
       float4 *float_pixel = float_pixels.data() + j * width;
       for (int64_t i = 0; i < width; i++, pixel += 4, float_pixel++) {
         float4 value = cast_to_float4(pixel);
@@ -452,7 +452,7 @@ inline void processor_apply_pixels_rgba(const OCIO::Processor *processor,
     }
 
     for (int64_t j = 0; j < num_rows; j++) {
-      T *pixel = pixels + (row + j) * y_stride * 4;
+      T *pixel = pixels + (row + j) * y_stride;
       float4 *float_pixel = float_pixels.data() + j * width;
       for (int64_t i = 0; i < width; i++, pixel += 4, float_pixel++) {
         float4 value = *float_pixel;

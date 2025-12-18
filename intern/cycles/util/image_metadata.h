@@ -64,7 +64,8 @@ class ImageMetaData {
                       const int64_t width,
                       const int64_t height,
                       const int64_t x_stride,
-                      const int64_t y_stride) const;
+                      const int64_t in_y_stride,
+                      const int64_t out_y_stride) const;
 
  protected:
   void detect_tiles(const OIIO::ImageSpec &spec, OIIO::string_view filepath);

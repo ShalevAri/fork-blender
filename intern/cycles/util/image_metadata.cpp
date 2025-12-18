@@ -114,7 +114,7 @@ void ImageMetaData::finalize(const ImageAlphaType alpha_type)
     }
     else {
       ColorSpaceManager::to_scene_linear(
-          colorspace, &average_color.x, 1, 1, 1, true, false, ignore_alpha || channel_packed);
+          colorspace, &average_color.x, 1, 1, 0, true, false, ignore_alpha || channel_packed);
     }
   }
 }
@@ -368,7 +368,8 @@ static void conform_pixels_to_metadata_type(const ImageMetaData &metadata,
                                             const int64_t width,
                                             const int64_t height,
                                             const int64_t x_stride,
-                                            const int64_t y_stride)
+                                            const int64_t in_y_stride,
+                                            const int64_t out_y_stride)
 {
   /* The kernel can handle 1 and 4 channel images. Anything that is not a single
    * channel image is converted to RGBA format. */
@@ -380,7 +381,7 @@ static void conform_pixels_to_metadata_type(const ImageMetaData &metadata,
     const StorageType one = util_image_cast_from_float<StorageType>(1.0f);
 
     for (int64_t j = 0; j < height; j++) {
-      StorageType *pixel = pixels + j * y_stride * 4;
+      StorageType *pixel = pixels + j * in_y_stride;
       for (int64_t i = 0; i < width; i++, pixel += 4) {
         const float c = util_image_cast_to_float(pixel[0]);
         const float m = util_image_cast_to_float(pixel[1]);
@@ -397,7 +398,7 @@ static void conform_pixels_to_metadata_type(const ImageMetaData &metadata,
   /* Associate alpha. */
   if (channels == 4 && metadata.associate_alpha) {
     for (int64_t j = 0; j < height; j++) {
-      StorageType *pixel = pixels + j * y_stride * 4;
+      StorageType *pixel = pixels + j * in_y_stride;
       for (int64_t i = 0; i < width; i++, pixel += 4) {
         const StorageType alpha = pixel[3];
         pixel[0] = util_image_multiply_native(pixel[0], alpha);
@@ -413,8 +414,8 @@ static void conform_pixels_to_metadata_type(const ImageMetaData &metadata,
     if (channels == 2) {
       /* Grayscale + alpha to RGBA. */
       for (int64_t j = height - 1; j >= 0; j--) {
-        StorageType *out_pixels = pixels + j * y_stride * 4;
-        StorageType *in_pixels = pixels + j * y_stride * x_stride;
+        StorageType *out_pixels = pixels + j * out_y_stride;
+        StorageType *in_pixels = pixels + j * in_y_stride;
         for (int64_t i = width - 1; i >= 0; i--) {
           out_pixels[i * 4 + 3] = in_pixels[i * x_stride + 1];
           out_pixels[i * 4 + 2] = in_pixels[i * x_stride + 0];
@@ -426,8 +427,8 @@ static void conform_pixels_to_metadata_type(const ImageMetaData &metadata,
     else if (channels == 3) {
       /* RGB to RGBA. */
       for (int64_t j = height - 1; j >= 0; j--) {
-        StorageType *out_pixels = pixels + j * y_stride * 4;
-        StorageType *in_pixels = pixels + j * y_stride * x_stride;
+        StorageType *out_pixels = pixels + j * out_y_stride;
+        StorageType *in_pixels = pixels + j * in_y_stride;
         for (int64_t i = width - 1; i >= 0; i--) {
           out_pixels[i * 4 + 3] = one;
           out_pixels[i * 4 + 2] = in_pixels[i * x_stride + 2];
@@ -439,8 +440,8 @@ static void conform_pixels_to_metadata_type(const ImageMetaData &metadata,
     else if (channels == 1) {
       /* Grayscale to RGBA. */
       for (int64_t j = height - 1; j >= 0; j--) {
-        StorageType *out_pixels = pixels + j * y_stride * 4;
-        StorageType *in_pixels = pixels + j * y_stride * x_stride;
+        StorageType *out_pixels = pixels + j * out_y_stride;
+        StorageType *in_pixels = pixels + j * in_y_stride;
         for (int64_t i = width - 1; i >= 0; i--) {
           out_pixels[i * 4 + 3] = one;
           out_pixels[i * 4 + 2] = in_pixels[i * x_stride];
@@ -453,7 +454,7 @@ static void conform_pixels_to_metadata_type(const ImageMetaData &metadata,
     /* Disable alpha if requested by the user. */
     if (metadata.ignore_alpha) {
       for (int64_t j = 0; j < height; j++) {
-        StorageType *out_pixels = pixels + j * y_stride * 4;
+        StorageType *out_pixels = pixels + j * out_y_stride;
         for (int64_t i = 0; i < width; i++) {
           out_pixels[i * 4 + 3] = one;
         }
@@ -470,7 +471,7 @@ static void conform_pixels_to_metadata_type(const ImageMetaData &metadata,
                                        pixels,
                                        width,
                                        height,
-                                       y_stride,
+                                       out_y_stride,
                                        is_rgba,
                                        metadata.compress_as_srgb,
                                        metadata.ignore_alpha || metadata.channel_packed);
@@ -483,7 +484,7 @@ static void conform_pixels_to_metadata_type(const ImageMetaData &metadata,
      * hue. */
     if (is_rgba) {
       for (int64_t j = 0; j < height; j++) {
-        StorageType *pixel = pixels + j * y_stride * 4;
+        StorageType *pixel = pixels + j * out_y_stride;
         for (int64_t i = 0; i < width; i++, pixel += 4) {
           if (!util_image_is_finite(pixel[0]) || !util_image_is_finite(pixel[1]) ||
               !util_image_is_finite(pixel[2]) || !util_image_is_finite(pixel[3]))
@@ -498,7 +499,7 @@ static void conform_pixels_to_metadata_type(const ImageMetaData &metadata,
     }
     else {
       for (int64_t j = 0; j < height; j++) {
-        StorageType *pixel = pixels + j * y_stride;
+        StorageType *pixel = pixels + j * out_y_stride;
         for (int64_t i = 0; i < width; i++, pixel++) {
           if (!util_image_is_finite(pixel[0])) {
             pixel[0] = 0;
@@ -513,28 +514,34 @@ void ImageMetaData::conform_pixels(void *pixels,
                                    const int64_t width,
                                    const int64_t height,
                                    const int64_t x_stride,
-                                   const int64_t y_stride) const
+                                   const int64_t in_y_stride,
+                                   const int64_t out_y_stride) const
 {
   switch (type) {
     case IMAGE_DATA_TYPE_BYTE4:
     case IMAGE_DATA_TYPE_BYTE:
       conform_pixels_to_metadata_type<uchar>(
-          *this, static_cast<uchar *>(pixels), width, height, x_stride, y_stride);
+          *this, static_cast<uchar *>(pixels), width, height, x_stride, in_y_stride, out_y_stride);
       break;
     case IMAGE_DATA_TYPE_USHORT:
     case IMAGE_DATA_TYPE_USHORT4:
-      conform_pixels_to_metadata_type<uint16_t>(
-          *this, static_cast<uint16_t *>(pixels), width, height, x_stride, y_stride);
+      conform_pixels_to_metadata_type<uint16_t>(*this,
+                                                static_cast<uint16_t *>(pixels),
+                                                width,
+                                                height,
+                                                x_stride,
+                                                in_y_stride,
+                                                out_y_stride);
       break;
     case IMAGE_DATA_TYPE_HALF4:
     case IMAGE_DATA_TYPE_HALF:
       conform_pixels_to_metadata_type<half>(
-          *this, static_cast<half *>(pixels), width, height, x_stride, y_stride);
+          *this, static_cast<half *>(pixels), width, height, x_stride, in_y_stride, out_y_stride);
       break;
     case IMAGE_DATA_TYPE_FLOAT4:
     case IMAGE_DATA_TYPE_FLOAT:
       conform_pixels_to_metadata_type<float>(
-          *this, static_cast<float *>(pixels), width, height, x_stride, y_stride);
+          *this, static_cast<float *>(pixels), width, height, x_stride, in_y_stride, out_y_stride);
       break;
     case IMAGE_DATA_TYPE_NANOVDB_FLOAT:
     case IMAGE_DATA_TYPE_NANOVDB_FLOAT3:
@@ -549,7 +556,7 @@ void ImageMetaData::conform_pixels(void *pixels,
 
 void ImageMetaData::conform_pixels(void *pixels) const
 {
-  conform_pixels(pixels, width, height, channels, width);
+  conform_pixels(pixels, width, height, channels, width * channels, width * (is_rgba() ? 4 : 1));
 }
 
 template<TypeDesc::BASETYPE FileFormat, typename StorageType>
@@ -562,6 +569,7 @@ static bool load_pixels_oiio(const ImageMetaData &metadata,
   const int64_t height = metadata.height;
   const int channels = metadata.channels;
   const int64_t num_pixels = width * height;
+  int64_t read_y_stride = width * channels * sizeof(StorageType);
 
   /* Read pixels through OpenImageIO. */
   StorageType *readpixels = pixels;
@@ -571,27 +579,30 @@ static bool load_pixels_oiio(const ImageMetaData &metadata,
     readpixels = &tmppixels[0];
   }
 
-  const int64_t scanlinesize = width * channels * sizeof(StorageType);
   if (!in->read_image(0,
                       0,
                       0,
                       channels,
                       FileFormat,
-                      (flip_Y) ? (uchar *)readpixels + (height - 1) * scanlinesize :
+                      (flip_Y) ? (uchar *)readpixels + (height - 1) * read_y_stride :
                                  (uchar *)readpixels,
                       AutoStride,
-                      (flip_Y) ? -scanlinesize : scanlinesize,
+                      (flip_Y) ? -read_y_stride : read_y_stride,
                       AutoStride))
   {
     return false;
   }
 
   if (channels > 4) {
-    for (int64_t i = num_pixels - 1, pixel = 0; pixel < num_pixels; pixel++, i--) {
-      pixels[i * 4 + 3] = tmppixels[i * channels + 3];
-      pixels[i * 4 + 2] = tmppixels[i * channels + 2];
-      pixels[i * 4 + 1] = tmppixels[i * channels + 1];
-      pixels[i * 4 + 0] = tmppixels[i * channels + 0];
+    for (int64_t j = 0; j < height; j++) {
+      const StorageType *in_pixels = tmppixels.data() + j * width * channels;
+      StorageType *out_pixels = pixels + j * width * 4;
+      for (int64_t i = 0; i < width; i++) {
+        out_pixels[i * 4 + 3] = in_pixels[i * channels + 3];
+        out_pixels[i * 4 + 2] = in_pixels[i * channels + 2];
+        out_pixels[i * 4 + 1] = in_pixels[i * channels + 1];
+        out_pixels[i * 4 + 0] = in_pixels[i * channels + 0];
+      }
     }
     tmppixels.clear();
   }

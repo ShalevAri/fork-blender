@@ -90,14 +90,15 @@ static bool oiio_load_pixels_tile(const unique_ptr<ImageInput> &in,
 
 {
   const int channels = metadata.channels;
-  const int64_t num_pixels = w * h;
+  int64_t read_y_stride = y_stride;
 
   /* Read pixels through OpenImageIO. */
   StorageType *readpixels = pixels;
   vector<StorageType> tmppixels;
   if (channels > 4) {
-    tmppixels.resize(num_pixels * channels);
+    tmppixels.resize(w * h * channels);
     readpixels = &tmppixels[0];
+    read_y_stride = w * channels * sizeof(StorageType);
   }
 
   if (!in->read_tiles(0,
@@ -113,24 +114,33 @@ static bool oiio_load_pixels_tile(const unique_ptr<ImageInput> &in,
                       typedesc,
                       readpixels,
                       x_stride,
-                      y_stride))
+                      read_y_stride))
   {
     return false;
   }
 
   if (channels > 4) {
-    for (int64_t i = num_pixels - 1, pixel = 0; pixel < num_pixels; pixel++, i--) {
-      pixels[i * 4 + 3] = tmppixels[i * channels + 3];
-      pixels[i * 4 + 2] = tmppixels[i * channels + 2];
-      pixels[i * 4 + 1] = tmppixels[i * channels + 1];
-      pixels[i * 4 + 0] = tmppixels[i * channels + 0];
+    for (int64_t j = 0; j < h; j++) {
+      const StorageType *in_pixels = tmppixels.data() + j * w * channels;
+      StorageType *out_pixels = pixels + j * (y_stride / sizeof(StorageType));
+      for (int64_t i = 0; i < w; i++) {
+        out_pixels[i * 4 + 3] = in_pixels[i * channels + 3];
+        out_pixels[i * 4 + 2] = in_pixels[i * channels + 2];
+        out_pixels[i * 4 + 1] = in_pixels[i * channels + 1];
+        out_pixels[i * 4 + 0] = in_pixels[i * channels + 0];
+      }
     }
     tmppixels.clear();
   }
 
   /* Can skip conform for speed if it's a Blender native tx file. */
   if (metadata.tile_need_conform) {
-    metadata.conform_pixels(pixels, w, h, x_stride, y_stride / x_stride);
+    metadata.conform_pixels(pixels,
+                            w,
+                            h,
+                            x_stride / sizeof(StorageType),
+                            y_stride / sizeof(StorageType),
+                            y_stride / sizeof(StorageType));
   }
 
   return true;
