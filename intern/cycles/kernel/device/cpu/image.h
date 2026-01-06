@@ -347,10 +347,8 @@ ccl_device float4 kernel_image_interp(
     const KernelTileDescriptor tile_descriptor = kernel_image_tile_map(kg, sd, tex, uv, duv, xy);
 
     if (!kernel_tile_descriptor_loaded(tile_descriptor)) {
-      if (tile_descriptor == KERNEL_TILE_LOAD_FAILED) {
-        return IMAGE_TEXTURE_MISSING_RGBA;
-      }
-      return tex.average_color;
+      return (tile_descriptor == KERNEL_TILE_LOAD_FAILED) ? IMAGE_TEXTURE_MISSING_RGBA :
+                                                            tex.average_color;
     }
 
     info = &kernel_data_fetch(image_info, kernel_tile_descriptor_slot(tile_descriptor));

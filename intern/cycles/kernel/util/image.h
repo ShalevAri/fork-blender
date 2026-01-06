@@ -144,23 +144,27 @@ kernel_image_tile_map(KernelGlobals kg,
 #ifdef __KERNEL_GPU__
     /* For GPU, mark load requested and cancel shader execution. */
     if (tile_descriptor == KERNEL_TILE_LOAD_NONE) {
+      tile_descriptor = KERNEL_TILE_LOAD_REQUEST;
       kernel_data_write(image_texture_tile_descriptors,
                         tex.tile_descriptor_offset + tile_offset,
-                        KERNEL_TILE_LOAD_REQUEST);
+                        tile_descriptor);
     }
-    sd->flag |= SD_CACHE_MISS;
+    if (tile_descriptor == KERNEL_TILE_LOAD_REQUEST) {
+      sd->flag |= SD_CACHE_MISS;
+    }
     return tile_descriptor;
 #else
-    KernelTileDescriptor *p_tile_descriptor =
-        &kg->image_texture_tile_descriptors.data[tex.tile_descriptor_offset + tile_offset];
-    kg->image_cache_load_tile(tex.slot,
-                              level,
-                              tile_x * (1 << tile_size_shift),
-                              tile_y * (1 << tile_size_shift),
-                              p_tile_descriptor);
-
-    tile_descriptor = *p_tile_descriptor;
     /* For CPU, load tile immediately. */
+    if (tile_descriptor == KERNEL_TILE_LOAD_NONE) {
+      KernelTileDescriptor *p_tile_descriptor =
+          &kg->image_texture_tile_descriptors.data[tex.tile_descriptor_offset + tile_offset];
+      kg->image_cache_load_tile(tex.slot,
+                                level,
+                                tile_x * (1 << tile_size_shift),
+                                tile_y * (1 << tile_size_shift),
+                                p_tile_descriptor);
+      tile_descriptor = *p_tile_descriptor;
+    }
     if (!kernel_tile_descriptor_loaded(tile_descriptor)) {
       return tile_descriptor;
     }
