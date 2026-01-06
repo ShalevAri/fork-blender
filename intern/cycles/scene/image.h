@@ -225,7 +225,14 @@ class ImageManager {
                           Progress &progress,
                           const set<const ImageSingle *> &images);
 
-  void device_update_requested(Device *device, Scene *scene);
+  void device_gpu_load_requested(Device *device, Scene *scene);
+  void device_cpu_load_requested(Device *device,
+                                 Scene *scene,
+                                 size_t slot,
+                                 int miplevel,
+                                 int x,
+                                 int y,
+                                 KernelTileDescriptor *tile_descriptor);
 
   bool set_animation_frame_update(const int frame);
 

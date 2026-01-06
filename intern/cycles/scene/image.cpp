@@ -533,33 +533,11 @@ void ImageManager::device_copy_image_textures(Device *device, Scene *scene)
   dscene.image_texture_udims.copy_to_device_if_modified();
 
   device->set_image_cache_func(
-      /* This is called by the CPU kernel to immediately load a tile. */
-      /* TODO: resizing image_info is not thread safe for CPU rendering, there is
-       * a workaround in the CPUDevice constructor. */
       [this, device, scene](
           size_t slot, int miplevel, int x, int y, KernelTileDescriptor *tile_descriptor) {
-        /* If we can atomically set KERNEL_TILE_LOAD_REQUEST, this thread is responsible
-         * for loading the tile. */
-        KernelTileDescriptor tile_descriptor_old = *tile_descriptor;
-        if (tile_descriptor_old != KERNEL_TILE_LOAD_REQUEST &&
-            tile_descriptor_old ==
-                atomic_cas_uint32(tile_descriptor, tile_descriptor_old, KERNEL_TILE_LOAD_REQUEST))
-        {
-          KernelTileDescriptor tile_descriptor_new = device_update_tile_requested(
-              device, scene, images[slot].get(), miplevel, x, y);
-          /* TODO: this is inefficient, and with CPU + GPU rendering we only want to update CPU. */
-          image_cache.copy_to_device_if_modified();
-          *tile_descriptor = tile_descriptor_new;
-          return;
-        }
-
-        /* Wait for other thread to load the tile. */
-        OIIO::atomic_backoff backoff;
-        while (*tile_descriptor == KERNEL_TILE_LOAD_REQUEST) {
-          backoff();
-        }
+        this->device_cpu_load_requested(device, scene, slot, miplevel, x, y, tile_descriptor);
       },
-      [this, device, scene] { this->device_update_requested(device, scene); });
+      [this, device, scene] { this->device_gpu_load_requested(device, scene); });
 }
 
 void ImageManager::device_load_image_full(Device *device, Scene *scene, const size_t slot)
@@ -824,7 +802,41 @@ void ImageManager::device_free_image(Scene *scene, size_t slot)
   images[slot].reset();
 }
 
-void ImageManager::device_update_requested(Device *device, Scene *scene)
+void ImageManager::device_cpu_load_requested(Device *device,
+                                             Scene *scene,
+                                             size_t slot,
+                                             int miplevel,
+                                             int x,
+                                             int y,
+                                             KernelTileDescriptor *tile_descriptor)
+{
+  /* This is called by the CPU kernel to immediately load a tile. */
+  /* TODO: resizing image_info is not thread safe for CPU rendering, there is
+   * a workaround in the CPUDevice constructor. */
+
+  /* If we can atomically set KERNEL_TILE_LOAD_REQUEST, this thread is responsible
+   * for loading the tile. */
+  KernelTileDescriptor tile_descriptor_old = *tile_descriptor;
+  if (tile_descriptor_old != KERNEL_TILE_LOAD_REQUEST &&
+      tile_descriptor_old ==
+          atomic_cas_uint32(tile_descriptor, tile_descriptor_old, KERNEL_TILE_LOAD_REQUEST))
+  {
+    KernelTileDescriptor tile_descriptor_new = device_update_tile_requested(
+        device, scene, images[slot].get(), miplevel, x, y);
+    /* TODO: this is inefficient, and with CPU + GPU rendering we only want to update CPU. */
+    image_cache.copy_to_device_if_modified();
+    *tile_descriptor = tile_descriptor_new;
+    return;
+  }
+
+  /* Wait for other thread to load the tile. */
+  OIIO::atomic_backoff backoff;
+  while (*tile_descriptor == KERNEL_TILE_LOAD_REQUEST) {
+    backoff();
+  }
+}
+
+void ImageManager::device_gpu_load_requested(Device *device, Scene *scene)
 {
   // TODO: Make this work with multi-device rendering
   scene->dscene.image_texture_tile_descriptors.copy_from_device();
