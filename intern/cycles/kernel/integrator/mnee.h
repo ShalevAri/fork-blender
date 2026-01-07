@@ -1010,7 +1010,7 @@ kernel_path_mnee_sample(KernelGlobals kg,
       break;
     }
 
-    const int object_flags = intersection_get_object_flags(kg, &probe_isect);
+    const uint object_flags = intersection_get_object_flags(kg, &probe_isect);
     if (object_flags & SD_OBJECT_CAUSTICS_CASTER) {
 
       /* Do we have enough slots. */

@@ -155,7 +155,7 @@ kernel_image_tile_map(KernelGlobals kg,
     return tile_descriptor;
 #else
     /* For CPU, load tile immediately. */
-    if (tile_descriptor == KERNEL_TILE_LOAD_NONE) {
+    if (tile_descriptor != KERNEL_TILE_LOAD_FAILED) {
       KernelTileDescriptor *p_tile_descriptor =
           &kg->image_texture_tile_descriptors.data[tex.tile_descriptor_offset + tile_offset];
       kg->image_cache_load_tile(tex.slot,

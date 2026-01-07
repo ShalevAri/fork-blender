@@ -9,6 +9,8 @@
 #include "util/image_maketx.h"
 #include "util/texture.h"
 
+namespace blender {
+
 bool CCL_has_texture_cache(const Image *image,
                            const char *filepath,
                            const char *texture_cache_directory)
@@ -44,3 +46,5 @@ bool CCL_generate_texture_cache(const Image *image,
                  ccl::ImageAlphaType(image->alpha_mode),
                  ccl::IMAGE_FORMAT_PLAIN);
 }
+
+}  // namespace blender

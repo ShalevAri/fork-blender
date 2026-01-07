@@ -8,6 +8,8 @@
 
 #pragma once
 
+namespace blender {
+
 struct ReportList;
 struct Scene;
 struct ScrArea;
@@ -103,3 +105,5 @@ void RENDER_OT_view_cancel(wmOperatorType *ot);
 /* `render_opengl.cc` */
 
 void RENDER_OT_opengl(wmOperatorType *ot);
+
+}  // namespace blender

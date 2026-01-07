@@ -20,8 +20,8 @@ CCL_NAMESPACE_BEGIN
 
 /* Packed Images */
 
-BlenderImageLoader::BlenderImageLoader(Image *b_image,
-                                       ImageUser *b_iuser,
+BlenderImageLoader::BlenderImageLoader(blender::Image *b_image,
+                                       blender::ImageUser *b_iuser,
                                        const int frame,
                                        const int tile_number,
                                        const bool is_preview_render)
@@ -32,9 +32,9 @@ BlenderImageLoader::BlenderImageLoader(Image *b_image,
       free_cache(!is_preview_render && !BKE_image_has_loaded_ibuf(b_image))
 {
   this->b_iuser.framenr = frame;
-  if (b_image->source != IMA_SRC_TILED) {
+  if (b_image->source != blender::IMA_SRC_TILED) {
     /* Image sequences currently not supported by this image loader. */
-    assert(b_image->source != IMA_SRC_SEQUENCE);
+    assert(b_image->source != blender::IMA_SRC_SEQUENCE);
   }
   else {
     /* Set UDIM tile, each can have different resolution. */
@@ -49,10 +49,10 @@ bool BlenderImageLoader::load_metadata(ImageMetaData &metadata)
 
   {
     void *lock;
-    ImBuf *ibuf = BKE_image_acquire_ibuf(b_image, &b_iuser, &lock);
+    blender::ImBuf *ibuf = BKE_image_acquire_ibuf(b_image, &b_iuser, &lock);
     if (ibuf) {
       is_float = ibuf->float_buffer.data != nullptr;
-      is_data = ibuf->colormanage_flag & IMB_COLORMANAGE_IS_DATA;
+      is_data = ibuf->colormanage_flag & blender::IMB_COLORMANAGE_IS_DATA;
       metadata.width = ibuf->x;
       metadata.height = ibuf->y;
       metadata.channels = (is_float) ? ibuf->channels : 4;
@@ -90,7 +90,9 @@ bool BlenderImageLoader::load_metadata(ImageMetaData &metadata)
   return true;
 }
 
-static void load_float_pixels(const ImBuf *ibuf, const ImageMetaData &metadata, float *out_pixels)
+static void load_float_pixels(const blender::ImBuf *ibuf,
+                              const ImageMetaData &metadata,
+                              float *out_pixels)
 {
   const size_t num_pixels = ((size_t)metadata.width) * metadata.height;
   const int out_channels = metadata.channels;
@@ -127,7 +129,9 @@ static void load_float_pixels(const ImBuf *ibuf, const ImageMetaData &metadata, 
   }
 }
 
-static void load_half_pixels(const ImBuf *ibuf, const ImageMetaData &metadata, half *out_pixels)
+static void load_half_pixels(const blender::ImBuf *ibuf,
+                             const ImageMetaData &metadata,
+                             half *out_pixels)
 {
   /* Half float. Blender does not have a half type, but in some cases
    * we up-sample byte to half to avoid precision loss for colorspace
@@ -159,7 +163,9 @@ static void load_half_pixels(const ImBuf *ibuf, const ImageMetaData &metadata, h
   }
 }
 
-static void load_byte_pixels(const ImBuf *ibuf, const ImageMetaData &metadata, uchar *out_pixels)
+static void load_byte_pixels(const blender::ImBuf *ibuf,
+                             const ImageMetaData &metadata,
+                             uchar *out_pixels)
 {
   const size_t num_pixels = ((size_t)metadata.width) * metadata.height;
   const int out_channels = metadata.channels;
@@ -185,7 +191,7 @@ static void load_byte_pixels(const ImBuf *ibuf, const ImageMetaData &metadata, u
 bool BlenderImageLoader::load_pixels_full(const ImageMetaData &metadata, uint8_t *out_pixels)
 {
   void *lock;
-  ImBuf *ibuf = BKE_image_acquire_ibuf(b_image, &b_iuser, &lock);
+  blender::ImBuf *ibuf = BKE_image_acquire_ibuf(b_image, &b_iuser, &lock);
 
   /* Image changed since we requested metadata, assume we'll get a signal to reload it later. */
   const bool mismatch = (ibuf == nullptr || ibuf->x != metadata.width ||

@@ -40,6 +40,8 @@
 
 #  include "CCL_api.h"
 
+namespace blender {
+
 /* -------------------------------------------------------------------- */
 /** \name Generate Texture Cache Operator
  * \{ */
@@ -103,10 +105,10 @@ static void generate_texture_cache(Main *bmain,
       char *udim_pattern = BKE_image_get_tile_strformat(filepath, &tile_format);
 
       if (tile_format != UDIM_TILE_FORMAT_NONE) {
-        LISTBASE_FOREACH (ImageTile *, tile, &image->tiles) {
+        for (const ImageTile &tile : image->tiles) {
           char tile_filepath[FILE_MAX];
           BKE_image_set_filepath_from_tile_number(
-              tile_filepath, udim_pattern, tile_format, tile->tile_number);
+              tile_filepath, udim_pattern, tile_format, tile.tile_number);
           if (BLI_is_file(tile_filepath)) {
             if (!CCL_has_texture_cache(image, tile_filepath, U.texture_cachedir)) {
               filepaths.add({image, tile_filepath});
@@ -254,5 +256,7 @@ void RENDER_OT_generate_texture_cache(wmOperatorType *ot)
 }
 
 /** \} */
+
+}  // namespace blender
 
 #endif
